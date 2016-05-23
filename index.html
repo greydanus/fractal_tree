@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en" hola_ext_inject="disabled"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="description" content="">
+  <meta name="author" content="">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Physics Tree</title>
+
+   <!-- jquery and jqueryui -->
+  <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
+  <link href="external/jquery-ui.min.css" rel="stylesheet">
+  <script src="external/jquery-ui.min.js"></script>
+
+  <!--google analytics-->
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-72311215-3', 'auto');
+    ga('send', 'pageview');
+
+  </script>
+  
+  <!-- bootstrap -->
+  <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+  <link href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet">
+
+  <!--math notation-->
+  <script type="text/javascript" async
+    src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML">
+  </script>
+
+    <!-- d3js -->
+  <script type="text/javascript" src="external/d3.min.js"></script>
+
+  <!-- markdown -->
+  <script type="text/javascript" src="external/marked.js"></script>
+  <script type="text/javascript" src="external/highlight.pack.js"></script>
+  <link rel="stylesheet" href="external/highlight_default.css">
+  <script>hljs.initHighlightingOnLoad();</script>
+
+  <style type="text/css"></style>
+  <link href="./external/style.css" rel="stylesheet">
+
+  <!-- environment dynamics -->
+  <script src="physics_tree.js"></script>
+  <script src="forces.js"></script>
+
+  <style>
+  #wrap {
+    width:800px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  h2 {
+    text-align: center;
+  }
+  body {
+    font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+  }
+  canvas {
+    border: 1px solid black;
+  }
+  </style>
+
+  <script type="application/javascript">
+    var canvas, ctx;
+    var current_interval_id;
+    var frac;
+    var initial_wav = 800;
+    var initial_mag = 0.2;
+    var force;
+    var count = 0;
+    var paused = false;
+    var onOff = false;
+
+    function start() {
+      canvas = document.getElementById("canvas_space");
+      ctx = canvas.getContext("2d");
+      frac = new Fractal(new Vec(canvas.width, canvas.height), 6);
+      force = new SinForce(new Vec(initial_mag,0), initial_wav)
+
+      // force magnitude slider
+      $( "#fmag_slider" ).slider({
+        min: 0,
+        max: 1,
+        value: .5,
+        step: 0.005,
+        slide: function(event, ui) {
+          force.new_magnitude(ui.value.toFixed(2));
+          $("#fmag_value").html(ui.value.toFixed(2));
+        }
+      });
+      $("#fmag_value").html(force.initial_force.length());
+      $("#fmag_slider").slider('value', force.initial_force.length());
+
+      // force wavelength slider
+      $( "#fwav_slider" ).slider({
+        min:   1,
+        max:   7,
+        value: 1.82211,
+        step:  .001,
+        slide: function(event, ui) {
+          force.new_wavelength((500*Math.log(ui.value)).toFixed(0));
+          $("#fwav_value").html((500*Math.log(ui.value)).toFixed(0));
+        }
+      });
+      $("#fwav_value").html(force.wavelength);
+      $("#fwav_slider").slider('value', Math.exp(force.wavelength/500));
+
+      // translational spring constant slider
+      $( "#tk_slider" ).slider({
+        min:   10,
+        max:   100,
+        value: 50,
+        step:  .1,
+        slide: function(event, ui) {
+          frac.setTk(ui.value.toFixed(1));
+          $("#tk_value").html(ui.value.toFixed(1));
+        }
+      });
+      $("#tk_value").html(frac.tk);
+      $("#tk_slider").slider('value', frac.tk);
+
+      // rotational spring constant slider
+      $( "#rk_slider" ).slider({
+        min:   0.1,
+        max:   10,
+        value: 1,
+        step:  .01,
+        slide: function(event, ui) {
+          frac.setRk(ui.value.toFixed(2));
+          $("#rk_value").html(ui.value.toFixed(2));
+        }
+      });
+      $("#rk_value").html(frac.rk);
+      $("#rk_slider").slider('value', frac.rk);
+
+      // render markdown
+      $(".md").each(function(){
+        $(this).html(marked($(this).html()));
+      });
+
+      // draw();
+
+      gonormal();
+    }
+    
+    // Draw everything
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      count += 1;
+      // console.log(canvas)
+
+      frac.draw(ctx);
+      force.draw(count,ctx,canvas.width/2,10,100);
+    }
+
+    function tick() {
+      canvas = document.getElementById("canvas_space");
+      ctx = canvas.getContext("2d");
+
+      if (onOff) {
+        $(function() {
+          $(document).keyup(function(e) {
+            if (e.keyCode == 37 || e.keyCode == 39) {
+              force.mag = 0;
+            }
+          }).keydown(function(e) {
+            if (e.keyCode == 37) {
+              force.mag = -1;
+            } else if (e.keyCode == 39) {
+              force.mag = 1;
+            }
+          });
+        });
+      }
+
+      if(simspeed === 3) {
+        for(var k=0;k<20;k++) {
+          count +=1;
+          frac.tick(force.get_force(count));
+        }
+      } else {
+        console.log(count);
+        frac.tick(force.get_force(count));
+      }
+      draw();
+    }
+
+    function sinForce() {
+      onOff = false;
+      force = new SinForce(new Vec(initial_mag,0), initial_wav)
+    }
+
+    function squareForce() {
+      onOff = false;
+      force = new SquareForce(new Vec(initial_mag,0), initial_wav)
+    }
+
+    function onOffForce() {
+      onOff = true;
+      force = new OnOffForce(new Vec(initial_mag,0), initial_wav)
+    }
+
+    var simspeed = 2;
+    function gofast() {
+      paused = false;
+      window.clearInterval(current_interval_id);
+      current_interval_id = setInterval(tick, 0);
+      skipdraw = true;
+      simspeed = 3;
+    }
+    function gonormal() {
+      paused = false;
+      window.clearInterval(current_interval_id);
+      current_interval_id = setInterval(tick, 0);
+      skipdraw = true;
+      simspeed = 2;
+    }
+    function goslow() {
+      paused = false;
+      window.clearInterval(current_interval_id);
+      current_interval_id = setInterval(tick, 30);
+      skipdraw = false;
+      simspeed = 1;
+    }
+    function pause() {
+      window.clearInterval(current_interval_id);
+      if(paused) {
+        paused = false;
+        gonormal();
+      } else {
+        paused = true;
+      }
+    }
+
+    </script>
+
+</head>
+
+
+
+
+<body onload="start();">
+
+  <a href="https://github.com/greydanus/physics_tree"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/365986a132ccd6a44c23a9169022c0b5c890c387/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f7265645f6161303030302e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_red_aa0000.png"></a>
+    
+
+<div id="header">
+  <h1><b>Physics Tree</b>: A numerical model of fractal dynamics</h1>
+  <div style="clear:both;"></div>
+</div>
+
+<div class="sechighlight">
+  <div class="container sec">
+    <h2>Summary</h2>
+
+    <div id="coursedesc">
+    I was walking to class one day when I saw a tree blowing in the wind. Physics must have been on my mind because suddenly I saw each branch, twig, and leaf as a simple harmonic oscillator. I decided to make a numerical model of the nonlinear system.
+    </div>
+  </div>
+</div>
+
+<!-- DEMO STARTS HERE -->
+
+<div class="maintext" style="text-align:center">
+  <div style="text-align:center;">
+    <br>
+
+  <!-- model parameter sliders -->
+  Max wind speed: <span id="fmag_value">0.50</span> <div style="width:70%;margin-left:auto;margin-right:auto" id="fmag_slider"></div>
+  Wavelength (time steps per cycle): <span id="fwav_value">350</span> <div style="width:70%;margin-left:auto;margin-right:auto" id="fwav_slider"></div>
+  Translational k: <span id="tk_value">50</span> <div style="width:70%;margin-left:auto;margin-right:auto" id="tk_slider"></div>
+  Rotational k: <span id="rk_value">1</span> <div style="width:70%;margin-left:auto;margin-right:auto" id="rk_slider"></div>
+  
+  <br>
+
+  <!-- force types -->
+  <button class="btn btn-success" onclick="sinForce()" style="width:150px;height:30px;margin-bottom:5px;">Sine Force</button>
+  <button class="btn btn-success" onclick="squareForce()" style="width:150px;height:30px;margin-bottom:5px;">Square Force</button>
+  <button class="btn btn-success" onclick="onOffForce()" style="width:150px;height:30px;margin-bottom:5px;">Arrow Key Force</button>
+
+  <br>
+
+  <div id="expi"></div>
+    <canvas id="canvas_space" width="700" height="500"></canvas>
+  </div>
+
+  <!-- simulation controls -->
+  <button class="btn btn-success" onclick="gofast()" style="width:150px;height:30px;margin-bottom:5px;">Go fast</button>
+  <button class="btn btn-success" onclick="gonormal()" style="width:150px;height:30px;margin-bottom:5px;">Go normal</button>
+  <button class="btn btn-success" onclick="goslow()" style="width:150px;height:30px;margin-bottom:5px;">Go slow</button>
+  <button class="btn btn-success" onclick="pause()" style="width:150px;height:30px;margin-bottom:5px;">Pause</button>
+</div>
+
+
+<div class="maintext">
+    <h3>Physics Tree</h3>
+    <p>
+        Use the sliders to change the model's parameters and look for different types of resonance. You'll find that the tree quickly stops acting like a tree but does show several interesting types of chaotic motion.
+    </p>
+    <p>
+        Each circle represents a base unit of a fractal. The lines connecting these circles have restoring forces both in the angular and lengthwise directions. For each time step, the fractal uses a recursive <code>tick()</code> function to update physics at every node and a recursive <code>draw()</code> function to re-render the fractal. The wind's force is given by a <code>force</code> object.
+    </p>
+</div>
+
+<div class="sechighlight">
+  <div id="footer">
+  Ongoing project
+  </div>
+</div>
+
+
+</body></html>
