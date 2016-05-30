@@ -1,10 +1,10 @@
 # Physics Tree
 [Website](https://greydanus.github.io/physics_tree/index.html)
 
-I was walking to class one day when I saw a tree blowing in the wind. Physics must have been on my mind because suddenly I saw each branch, twig, and leaf as a simple harmonic oscillator. I decided to make a numerical model of the nonlinear system.
+The physical phenomenon of a tree blowing in the wind is common but rarely analyzed by physicists and mathemeticians because it is very difficult to model the large number of nonlinear interactions. The motion of a given branch, for example, is determined not only by external forces, but also by the motions of its parent branch and any child branches. One way to understand this system is to model the entire tree as a fractal and then add dynamics to each node of the fractal.
 
 ## Details
-I wrote the project in pure JavaScript. I took the animations for the canvas and the Vec class from another one of my projects, Friendly qLearning. Not all the physics is correct for this model; keep in mind that it is a work in progress.
+I made an <a href="http://nbviewer.jupyter.org/github/greydanus/physics_tree/blob/master/phase_space.ipynb">ipython notebook</a> to analyze the motion of this tree more rigorously for my applied math course.
 
 ## License
 
