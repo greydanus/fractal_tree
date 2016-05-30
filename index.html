@@ -128,13 +128,13 @@
 
       // rotational spring constant slider
       $( "#rk_slider" ).slider({
-        min:   0.1,
-        max:   10,
-        value: 1,
-        step:  .01,
+        min:   0.0,
+        max:   0.1,
+        value: .05,
+        step:  .0001,
         slide: function(event, ui) {
-          frac.setRk(ui.value.toFixed(2));
-          $("#rk_value").html(ui.value.toFixed(2));
+          frac.setRk(ui.value.toFixed(4));
+          $("#rk_value").html(ui.value.toFixed(4));
         }
       });
       $("#rk_value").html(frac.rk);
@@ -261,7 +261,7 @@
     <h2>Summary</h2>
 
     <div id="coursedesc">
-    I was walking to class one day when I saw a tree blowing in the wind. Physics must have been on my mind because suddenly I saw each branch, twig, and leaf as a simple harmonic oscillator. I decided to make a numerical model of the nonlinear system.
+    The physical phenomenon of a tree blowing in the wind is common but rarely analyzed by physicists and mathemeticians because it is very difficult to model the large number of nonlinear interactions. The motion of a given branch, for example, is determined not only by external forces, but also by the motions of its parent branch and any child branches. One way to understand this system is to model the entire tree as a fractal and then add dynamics to each node of the fractal.
     </div>
   </div>
 </div>
@@ -276,7 +276,7 @@
   Max wind speed: <span id="fmag_value">0.50</span> <div style="width:70%;margin-left:auto;margin-right:auto" id="fmag_slider"></div>
   Wavelength (time steps per cycle): <span id="fwav_value">350</span> <div style="width:70%;margin-left:auto;margin-right:auto" id="fwav_slider"></div>
   <!-- Translational k: <span id="tk_value">50</span> <div style="width:70%;margin-left:auto;margin-right:auto" id="tk_slider"></div> -->
-  Rotational k: <span id="rk_value">1</span> <div style="width:70%;margin-left:auto;margin-right:auto" id="rk_slider"></div>
+  Rotational k: <span id="rk_value">.05</span> <div style="width:70%;margin-left:auto;margin-right:auto" id="rk_slider"></div>
   
   <br>
 
@@ -302,7 +302,10 @@
 <div class="maintext">
     <h3>Physics Tree</h3>
     <p>
-        Use the sliders to change the model's parameters and look for different types of resonance. You'll find that the tree quickly stops acting like a tree but does show several interesting types of chaotic motion.
+        Use the sliders to change the model's parameters and look for different types of resonance. You'll find that the tree quickly stops acting like a tree but does show several interesting types of chaotic and periodic motion.
+    </p>
+    <p>
+        I made an <a href="http://nbviewer.jupyter.org/github/greydanus/physics_tree/blob/master/phase_space.ipynb">ipython notebook</a> to analyze the motion of this tree more rigorously for my applied math course.
     </p>
     <p>
         Each circle represents a base unit of a fractal. The lines connecting these circles have restoring forces both in the angular and lengthwise directions. For each time step, the fractal uses a recursive <code>tick()</code> function to update physics at every node and a recursive <code>draw()</code> function to re-render the fractal. The wind's force is given by a <code>force</code> object.
