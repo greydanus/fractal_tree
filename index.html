@@ -81,7 +81,7 @@
     function start() {
       canvas = document.getElementById("canvas_space");
       ctx = canvas.getContext("2d");
-      frac = new Fractal(new Vec(canvas.width, canvas.height), 6);
+      frac = new Fractal(new Vec(canvas.width, canvas.height), 5);
       force = new SinForce(new Vec(initial_mag,0), initial_wav)
 
       // force magnitude slider
@@ -113,18 +113,18 @@
       $("#fwav_slider").slider('value', Math.exp(force.wavelength/500));
 
       // translational spring constant slider
-      $( "#tk_slider" ).slider({
-        min:   10,
-        max:   100,
-        value: 50,
-        step:  .1,
-        slide: function(event, ui) {
-          frac.setTk(ui.value.toFixed(1));
-          $("#tk_value").html(ui.value.toFixed(1));
-        }
-      });
-      $("#tk_value").html(frac.tk);
-      $("#tk_slider").slider('value', frac.tk);
+      // $( "#tk_slider" ).slider({
+      //   min:   10,
+      //   max:   100,
+      //   value: 50,
+      //   step:  .1,
+      //   slide: function(event, ui) {
+      //     frac.setTk(ui.value.toFixed(1));
+      //     $("#tk_value").html(ui.value.toFixed(1));
+      //   }
+      // });
+      // $("#tk_value").html(frac.tk);
+      // $("#tk_slider").slider('value', frac.tk);
 
       // rotational spring constant slider
       $( "#rk_slider" ).slider({
@@ -275,7 +275,7 @@
   <!-- model parameter sliders -->
   Max wind speed: <span id="fmag_value">0.50</span> <div style="width:70%;margin-left:auto;margin-right:auto" id="fmag_slider"></div>
   Wavelength (time steps per cycle): <span id="fwav_value">350</span> <div style="width:70%;margin-left:auto;margin-right:auto" id="fwav_slider"></div>
-  Translational k: <span id="tk_value">50</span> <div style="width:70%;margin-left:auto;margin-right:auto" id="tk_slider"></div>
+  <!-- Translational k: <span id="tk_value">50</span> <div style="width:70%;margin-left:auto;margin-right:auto" id="tk_slider"></div> -->
   Rotational k: <span id="rk_value">1</span> <div style="width:70%;margin-left:auto;margin-right:auto" id="rk_slider"></div>
   
   <br>
