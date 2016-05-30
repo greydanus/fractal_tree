@@ -33,9 +33,9 @@ var Fractal = function(world, depth) {
 
   //translation dynamics
   this.m = Math.PI*this.rad*this.rad;
-  this.tk = 100;
+  this.tk = 50;
   this.rk = .05;
-  this.tDamping = 0.025;
+  this.tDamping = 0.03;
   this.forceScale = 0.5;
 
   this.p = new Vec(world.x/2, world.y - this.rad);
@@ -232,6 +232,7 @@ Node.prototype = {
           a_from_rotation.normalize();
           a_from_rotation.scale( child.m*Math.pow(child.rad,3)*child_alpha/(2*this.m*this.rad) );
           this.a = this.a.add(a_from_rotation);
+          // console.log("child_a_from_rotation=" + a_from_rotation.x + ", " + a_from_rotation.y);
         }
 
         //translational part
@@ -241,9 +242,8 @@ Node.prototype = {
           child_a.normalize();
           child_a.scale(-1*this.tk*x/this.m);
           this.a = this.a.add(child_a);
+          // console.log("child_a=" + child_a.x + ", " + child_a.y);
         }
-
-        child.tick(force);
       }
     }
 
@@ -265,6 +265,7 @@ Node.prototype = {
       a_from_rotation.normalize();
       a_from_rotation.scale( this.parent.m*Math.pow(this.parent.rad,3)*parent_alpha/(2*this.m*this.rad) );
       this.a = this.a.add(a_from_rotation);
+      // console.log("a_from_rotation=" + a_from_rotation.x + ", " + a_from_rotation.y);
     }
 
     //translational part
@@ -274,27 +275,30 @@ Node.prototype = {
       parent_a.normalize();
       parent_a.scale(-1*this.tk*x/this.m);
       this.a = this.a.add(parent_a);
+      // console.log("parent_a=" + parent_a.x + ", " + parent_a.y);
     }
 
     //add wind to acceleration
     var wind_a = force.copy();
     wind_a.scale(2*this.rad/this.m); // force goes with diameter for objects in 2D system
     this.a = this.a.add(wind_a);
-    // if (this.depth == 4) {
-    //   console.log("a=" + this.a.x + ", " + this.a.y);
-    // }
 
     //update position, velocity
     this.v = this.v.add(this.a);
     this.v.x = this.v.x - this.v.x*this.tDamping;
     this.v.y = this.v.y - this.v.y*this.tDamping;
-    // if (this.depth == 4) {
-    //   console.log("v=" + this.v.x + ", " + this.v.y);
-    // }
-    // if (this.depth == 4) {
-    //   console.log("p=" + this.p.x + ", " + this.p.y);
-    // }
     this.p = this.p.add(this.v);
+
+    // if (this.depth == 4) {
+    //       console.log("position=" + this.p.x + ", " + this.p.y);
+    // }
+
+    if(this.children.length > 0) {
+      for(var c=0,clen=this.children.length;c<clen;c++) {
+        var child = this.children[c];
+        child.tick(force);
+      }
+    }
   },
   setRk: function(new_rk) {
     this.rk = new_rk;
