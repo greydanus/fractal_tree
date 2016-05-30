@@ -33,10 +33,10 @@ var Fractal = function(world, depth) {
 
   //translation dynamics
   this.m = Math.PI*this.rad*this.rad;
-  this.tk = 500;
-  this.rk = 1;
+  this.tk = 100;
+  this.rk = .05;
   this.tDamping = 0.025;
-  this.forceScale = 0.1;
+  this.forceScale = 0.5;
 
   this.p = new Vec(world.x/2, world.y - this.rad);
   // this.op = new Vec(w.x/2, w.y - this.rad);
@@ -279,12 +279,21 @@ Node.prototype = {
     //add wind to acceleration
     var wind_a = force.copy();
     wind_a.scale(2*this.rad/this.m); // force goes with diameter for objects in 2D system
-    this.a = this.a.add(force);
+    this.a = this.a.add(wind_a);
+    // if (this.depth == 4) {
+    //   console.log("a=" + this.a.x + ", " + this.a.y);
+    // }
 
     //update position, velocity
     this.v = this.v.add(this.a);
     this.v.x = this.v.x - this.v.x*this.tDamping;
     this.v.y = this.v.y - this.v.y*this.tDamping;
+    // if (this.depth == 4) {
+    //   console.log("v=" + this.v.x + ", " + this.v.y);
+    // }
+    // if (this.depth == 4) {
+    //   console.log("p=" + this.p.x + ", " + this.p.y);
+    // }
     this.p = this.p.add(this.v);
   },
   setRk: function(new_rk) {
