@@ -1,71 +1,42 @@
 <!DOCTYPE html>
-<html lang="en" hola_ext_inject="disabled"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <meta name="description" content="">
-  <meta name="author" content="">
+  <meta name="author" content="Sam Greydanus">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Fractal Tree</title>
 
-   <!-- jquery and jqueryui -->
-  <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
+  <script src="external/jquery-2.1.3.min.js"></script>
   <link href="external/jquery-ui.min.css" rel="stylesheet">
   <script src="external/jquery-ui.min.js"></script>
+  <link href="external/bootstrap.min.css" rel="stylesheet">
+  <link href="external/style.css" rel="stylesheet">
+  <style>
+    body { font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif; font-weight: 400; color: #222; }
+    #header { margin: 30px 16px 22px; }
+    h1 { font-size: 28px; line-height: 1.25; margin: 0; }
+    h2 { text-align: left; margin-top: 10px; }
+    .sec, .maintext { width: auto; max-width: 760px; padding-left: 16px; padding-right: 16px; }
+    #coursedesc { text-align: left; }
+    .demo { text-align: center; margin-top: 22px; }
+    .control { max-width: 520px; margin: 0 auto 16px; }
+    .control .name { margin-bottom: 7px; }
+    .buttons { margin: 6px 0 12px; }
+    .buttons .btn { min-width: 120px; margin: 0 2px 6px; }
+    #canvas_space { border: 1px solid #bbb; background: white; max-width: 100%; height: auto; }
+    textarea { font-family: Menlo, Consolas, monospace; font-size: 12px; width: 100%; max-width: 700px; }
+    .note { color: #666; font-size: 14px; margin: 14px 0 6px; }
+    #footer { height: auto; padding: 22px 16px; font-size: 14px; color: #666; }
+    .gh-link { position: absolute; top: 10px; right: 14px; font-size: 14px; }
+    @media (max-width: 700px) { .gh-link { position: static; display: block; text-align: center; margin-top: 10px; } h1 { font-size: 23px; } }
+  </style>
 
-  <!--google analytics-->
-  <script>
-    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-    })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
-
-    ga('create', 'UA-72311215-3', 'auto');
-    ga('send', 'pageview');
-
-  </script>
-  
-  <!-- bootstrap -->
-  <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
-  <link href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet">
-
-  <!--math notation-->
-  <script type="text/javascript" async
-    src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML">
-  </script>
-
-    <!-- d3js -->
-  <script type="text/javascript" src="external/d3.min.js"></script>
-
-  <!-- markdown -->
-  <script type="text/javascript" src="external/marked.js"></script>
-  <script type="text/javascript" src="external/highlight.pack.js"></script>
-  <link rel="stylesheet" href="external/highlight_default.css">
-  <script>hljs.initHighlightingOnLoad();</script>
-
-  <style type="text/css"></style>
-  <link href="./external/style.css" rel="stylesheet">
 
   <!-- environment dynamics -->
   <script src="fractal_tree.js"></script>
   <script src="forces.js"></script>
 
-  <style>
-  #wrap {
-    width:800px;
-    margin-left: auto;
-    margin-right: auto;
-  }
-  h2 {
-    text-align: center;
-  }
-  body {
-    font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
-  }
-  canvas {
-    border: 1px solid black;
-  }
-  </style>
 
   <script type="application/javascript">
     var canvas, ctx;
@@ -77,6 +48,8 @@
     var count = 0;
     var paused = false;
     var onOff = false;
+    var cur_mag = initial_mag;
+    var cur_wav = initial_wav;
 
     function start() {
       canvas = document.getElementById("canvas_space");
@@ -91,11 +64,12 @@
         value: .5,
         step: 0.005,
         slide: function(event, ui) {
-          force.new_magnitude(ui.value.toFixed(2));
+          cur_mag = ui.value;
+          force.new_magnitude(cur_mag);
           $("#fmag_value").html(ui.value.toFixed(2));
         }
       });
-      $("#fmag_value").html(force.initial_force.length());
+      $("#fmag_value").html(force.initial_force.length().toFixed(2));
       $("#fmag_slider").slider('value', force.initial_force.length());
 
       // force wavelength slider
@@ -105,8 +79,9 @@
         value: 1.82211,
         step:  .001,
         slide: function(event, ui) {
-          force.new_wavelength((500*Math.log(ui.value)).toFixed(0));
-          $("#fwav_value").html((500*Math.log(ui.value)).toFixed(0));
+          cur_wav = Math.max(1, Math.round(500*Math.log(ui.value)));
+          force.new_wavelength(cur_wav);
+          $("#fwav_value").html(cur_wav);
         }
       });
       $("#fwav_value").html(force.wavelength);
@@ -133,19 +108,21 @@
         value: .05,
         step:  .0001,
         slide: function(event, ui) {
-          frac.setRk(ui.value.toFixed(4));
+          frac.setRk(ui.value);
           $("#rk_value").html(ui.value.toFixed(4));
         }
       });
       $("#rk_value").html(frac.rk);
       $("#rk_slider").slider('value', frac.rk);
 
-      // render markdown
-      $(".md").each(function(){
-        $(this).html(marked($(this).html()));
+      // arrow keys push the tree when the arrow key force is on
+      $(document).keydown(function(e) {
+        if (!onOff) { return; }
+        if (e.keyCode == 37) { force.mag = -1; e.preventDefault(); }
+        if (e.keyCode == 39) { force.mag = 1; e.preventDefault(); }
+      }).keyup(function(e) {
+        if (onOff && (e.keyCode == 37 || e.keyCode == 39)) { force.mag = 0; }
       });
-
-      // draw();
 
       gonormal();
     }
@@ -154,7 +131,6 @@
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       count += 1;
-      // console.log(canvas)
 
       frac.draw(ctx);
       force.draw(count,ctx,canvas.width/2,10,100);
@@ -164,29 +140,12 @@
       canvas = document.getElementById("canvas_space");
       ctx = canvas.getContext("2d");
 
-      if (onOff) {
-        $(function() {
-          $(document).keyup(function(e) {
-            if (e.keyCode == 37 || e.keyCode == 39) {
-              force.mag = 0;
-            }
-          }).keydown(function(e) {
-            if (e.keyCode == 37) {
-              force.mag = -1;
-            } else if (e.keyCode == 39) {
-              force.mag = 1;
-            }
-          });
-        });
-      }
-
       if(simspeed === 3) {
         for(var k=0;k<20;k++) {
           count +=1;
           frac.tick(force.get_force(count));
         }
       } else {
-        console.log(count);
         frac.tick(force.get_force(count));
       }
       draw();
@@ -194,17 +153,17 @@
 
     function sinForce() {
       onOff = false;
-      force = new SinForce(new Vec(initial_mag,0), initial_wav)
+      force = new SinForce(new Vec(cur_mag,0), cur_wav)
     }
 
     function squareForce() {
       onOff = false;
-      force = new SquareForce(new Vec(initial_mag,0), initial_wav)
+      force = new SquareForce(new Vec(cur_mag,0), cur_wav)
     }
 
     function onOffForce() {
       onOff = true;
-      force = new OnOffForce(new Vec(initial_mag,0), initial_wav)
+      force = new OnOffForce(new Vec(cur_mag,0), cur_wav)
     }
 
     var simspeed = 2;
@@ -248,7 +207,7 @@
 
 <body onload="start();">
 
-  <a href="https://github.com/greydanus/fractal_tree"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/365986a132ccd6a44c23a9169022c0b5c890c387/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f7265645f6161303030302e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_red_aa0000.png"></a>
+  <a class="gh-link" href="https://github.com/greydanus/fractal_tree">View on GitHub</a>
     
 
 <div id="header">
@@ -268,34 +227,26 @@
 
 <!-- DEMO STARTS HERE -->
 
-<div class="maintext" style="text-align:center">
-  <div style="text-align:center;">
-    <br>
+<div class="maintext demo">
+  <div class="control"><div class="name">Max wind speed: <span id="fmag_value">0.20</span></div><div id="fmag_slider"></div></div>
+  <div class="control"><div class="name">Wavelength (time steps per cycle): <span id="fwav_value">800</span></div><div id="fwav_slider"></div></div>
+  <div class="control"><div class="name">Rotational k: <span id="rk_value">0.05</span></div><div id="rk_slider"></div></div>
 
-  <!-- model parameter sliders -->
-  Max wind speed: <span id="fmag_value">0.50</span> <div style="width:70%;margin-left:auto;margin-right:auto" id="fmag_slider"></div>
-  Wavelength (time steps per cycle): <span id="fwav_value">350</span> <div style="width:70%;margin-left:auto;margin-right:auto" id="fwav_slider"></div>
-  <!-- Translational k: <span id="tk_value">50</span> <div style="width:70%;margin-left:auto;margin-right:auto" id="tk_slider"></div> -->
-  Rotational k: <span id="rk_value">.05</span> <div style="width:70%;margin-left:auto;margin-right:auto" id="rk_slider"></div>
-  
-  <br>
-
-  <!-- force types -->
-  <button class="btn btn-success" onclick="sinForce()" style="width:150px;height:30px;margin-bottom:5px;">Sine Force</button>
-  <button class="btn btn-success" onclick="squareForce()" style="width:150px;height:30px;margin-bottom:5px;">Square Force</button>
-  <button class="btn btn-success" onclick="onOffForce()" style="width:150px;height:30px;margin-bottom:5px;">Arrow Key Force</button>
-
-  <br>
-
-  <div id="expi"></div>
-    <canvas id="canvas_space" width="700" height="500"></canvas>
+  <div class="buttons">
+    <button class="btn btn-default btn-sm" onclick="sinForce()">Sine force</button>
+    <button class="btn btn-default btn-sm" onclick="squareForce()">Square force</button>
+    <button class="btn btn-default btn-sm" onclick="onOffForce()">Arrow key force</button>
   </div>
 
-  <!-- simulation controls -->
-  <button class="btn btn-success" onclick="gofast()" style="width:150px;height:30px;margin-bottom:5px;">Go fast</button>
-  <button class="btn btn-success" onclick="gonormal()" style="width:150px;height:30px;margin-bottom:5px;">Go normal</button>
-  <button class="btn btn-success" onclick="goslow()" style="width:150px;height:30px;margin-bottom:5px;">Go slow</button>
-  <button class="btn btn-success" onclick="pause()" style="width:150px;height:30px;margin-bottom:5px;">Pause</button>
+  <canvas id="canvas_space" width="700" height="500"></canvas>
+
+  <div class="buttons">
+    <button class="btn btn-success btn-sm" onclick="gofast()">Go fast</button>
+    <button class="btn btn-success btn-sm" onclick="gonormal()">Go normal</button>
+    <button class="btn btn-success btn-sm" onclick="goslow()">Go slow</button>
+    <button class="btn btn-default btn-sm" onclick="pause()">Pause</button>
+  </div>
+  <div class="note">The bar above the tree shows the wind. With the arrow key force, hold the left or right arrow key to push.</div>
 </div>
 
 
@@ -305,7 +256,7 @@
         Use the sliders to change the model's parameters and look for different types of resonance. You'll find that the tree quickly stops acting like a tree but does show several interesting types of chaotic and periodic motion.
     </p>
     <p>
-        I made an <a href="http://nbviewer.jupyter.org/github/greydanus/fractal_tree/blob/gh-pages/phase_space.ipynb">ipython notebook</a> to analyze the motion of this tree more rigorously for my applied math course. We also made a <a href="./files/fractal_tree_poster.pdf">poster</a>.
+        I made an <a href="https://nbviewer.jupyter.org/github/greydanus/fractal_tree/blob/gh-pages/phase_space.ipynb">ipython notebook</a> to analyze the motion of this tree more rigorously for my applied math course. We also made a <a href="./files/fractal_tree_poster.pdf">poster</a>.
     </p>
     <p>
         Each circle represents a base unit of a fractal. The lines connecting these circles have restoring forces both in the angular and lengthwise directions. For each time step, the fractal uses a recursive <code>tick()</code> function to update physics at every node and a recursive <code>draw()</code> function to re-render the fractal. The wind's force is given by a <code>force</code> object.
@@ -314,7 +265,7 @@
 
 <div class="sechighlight">
   <div id="footer">
-  Ongoing project
+  Sam Greydanus, 2016 &middot; <a href="https://greydanus.github.io/about_me/">greydanus.github.io</a>
   </div>
 </div>
 
